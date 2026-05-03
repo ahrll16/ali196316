@@ -7,10 +7,14 @@ from datetime import datetime, timedelta
 # 1. Sayfa Yapılandırması
 st.set_page_config(page_title="Ekonomi Terminali", layout="wide", page_icon="🏛️")
 
-# 2. Kalıcı Dark Mode & Profesyonel Tipografi CSS
+# 2. Kalıcı Dark Mode Kilidi & Stil Düzenlemeleri
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
     
     :root {
         --primary-color: #58a6ff;
@@ -25,7 +29,7 @@ st.markdown("""
         color: #c9d1d9 !important;
     }
 
-    h1, h2, h3, h4 { color: #c9d1d9 !important; }
+    h1, h2, h3, h4, label, .stMarkdown, p, span { color: #c9d1d9 !important; }
 
     [data-testid="stMetric"] {
         background-color: #161b22 !important;
@@ -33,10 +37,7 @@ st.markdown("""
         padding: 20px;
         border-radius: 12px;
     }
-    
-    [data-testid="stMetricLabel"] { color: #8b949e !important; font-size: 14px !important; font-weight: 600 !important; }
 
-    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
     .stTabs [data-baseweb="tab"] {
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
@@ -52,9 +53,19 @@ st.markdown("""
         border-left: 5px solid #58a6ff;
         margin-bottom: 10px;
         background-color: #1c2128;
-        border-right: 1px solid #30363d;
-        border-top: 1px solid #30363d;
-        border-bottom: 1px solid #30363d;
+        border: 1px solid #30363d;
+    }
+
+    /* Yasal Uyarı Kutusu */
+    .disclaimer-box {
+        margin-top: 50px;
+        padding: 20px;
+        border-radius: 10px;
+        background-color: rgba(255, 75, 75, 0.05);
+        border: 1px solid rgba(255, 75, 75, 0.2);
+        font-size: 12px;
+        color: #8b949e;
+        line-height: 1.6;
     }
     
     .unit-text { font-size: 11px; color: #58a6ff; font-weight: 600; }
@@ -115,7 +126,6 @@ crypto = {
     "BNB": "BNB-USD", "Cardano": "ADA-USD", "Avalanche": "AVAX-USD", "Dogecoin": "DOGE-USD"
 }
 
-# Tam Liste Ekonomik Takvim
 economic_calendar = [
     {"Tarih": "2026-05-21", "Ülke": "🇹🇷 Türkiye", "Olay": "TCMB Faiz Kararı", "Etki": "Yüksek"},
     {"Tarih": "2026-06-10", "Ülke": "🇺🇸 ABD", "Olay": "FED Faiz Kararı & Projeksiyonlar", "Etki": "Kritik"},
@@ -127,7 +137,7 @@ economic_calendar = [
     {"Tarih": "2026-12-16", "Ülke": "🇺🇸 ABD", "Olay": "Yılın Son FED Faiz Kararı", "Etki": "Yüksek"}
 ]
 
-# 4. YARDIMCI FONKSİYONLAR
+# 4. FONKSİYONLAR
 def fetch_data(ticker, multiplier=1):
     try:
         d = yf.Ticker(ticker).history(period="7d")
@@ -146,22 +156,19 @@ def render_pro_chart(assets_dict, category_name):
     if any(isinstance(v, dict) for v in assets_dict.values()):
         for sub in assets_dict.values(): flat_list.update(sub)
     else: flat_list = assets_dict
-
     with c_sel:
         name = st.selectbox(f"Varlık:", list(flat_list.keys()), key=f"s_{category_name}")
         val = flat_list[name]
         ticker = val[0] if isinstance(val, list) else val
         mult = val[1] if isinstance(val, list) and isinstance(val[1], (int, float)) else 1
-
     with c_per:
         per_map = {"1 Ay": "1mo", "1 Yıl": "1y", "5 Yıl": "5y"}
         sel_p = st.select_slider("Zaman:", options=list(per_map.keys()), value="1 Yıl", key=f"p_{category_name}")
-    
     hist = yf.Ticker(ticker).history(period=per_map[sel_p])
     if not hist.empty:
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'] * mult, fill='tozeroy', line=dict(color='#58a6ff', width=2), fillcolor='rgba(88, 166, 255, 0.1)', name=name))
-        fig.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=350, xaxis=dict(showgrid=False, tickfont=dict(color='#8b949e')), yaxis=dict(showgrid=True, gridcolor='#30363d', tickfont=dict(color='#8b949e')), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', hovermode="x unified")
+        fig.update_layout(template="plotly_dark", margin=dict(l=0, r=0, t=20, b=0), height=350, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor='#30363d'), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', hovermode="x unified")
         st.plotly_chart(fig, use_container_width=True)
 
 # 5. ANA ARAYÜZ
@@ -169,6 +176,7 @@ st.title("🏛️ Ekonomi Terminali")
 
 tabs = st.tabs(["💱 Döviz", "📉 Borsalar", "🏗️ Emtia", "🏢 Şirketler", "₿ Kripto", "📅 Takvim", "💼 Simülatör"])
 
+# Sekmelerin içeriği (Önceki v24 ile aynı)
 with tabs[0]:
     cols = st.columns(4)
     for idx, (n, v) in enumerate(currencies.items()):
@@ -207,67 +215,49 @@ with tabs[4]:
     cols = st.columns(4)
     for idx, (n, t) in enumerate(crypto.items()):
         p, d, pct = fetch_data(t)
-        if p: cols[idx%4].metric(n, f"{p:,.2f}", f"{d:,.2f} (%{pct:+.2f})")
+        if p: cols[idx%4].metric(n, f"{n}", f"{p:,.2f}", f"{pct:+.2f}%")
     render_pro_chart(crypto, "Kripto")
 
-# --- 6. TAKVİM (DÜZELTİLDİ) ---
 with tabs[5]:
     st.subheader("📅 Stratejik Ekonomik Takvim (2026)")
     for event in economic_calendar:
-        st.markdown(f"""
-            <div class="calendar-card">
-                <b>{event['Tarih']}</b> | {event['Ülke']} - <b>{event['Olay']}</b>
-                <br><small style="color: #8b949e">Önem Derecesi: {event['Etki']}</small>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<div class="calendar-card"><b>{event["Tarih"]}</b> | {event["Ülke"]} - <b>{event["Olay"]}</b><br><small style="color: #8b949e">Önem: {event["Etki"]}</small></div>', unsafe_allow_html=True)
 
-# --- 7. SİMÜLATÖR (DÜZELTİLDİ) ---
 with tabs[6]:
     st.subheader("💼 Akıllı Yatırım Simülatörü")
     s1, s2, s3, s4 = st.columns(4)
-    
-    # Tüm Ticker'ları birleştir
     all_flat = {**{k: v[0] for k, v in currencies.items()}, **crypto}
     for sub in stock_exchanges.values(): all_flat.update(sub)
     for sub in commodities.values(): 
         for k, v in sub.items(): all_flat[k] = v[0]
     for sub in company_data.values(): all_flat.update(sub)
 
-    asset_key = s1.selectbox("Varlık Seç:", list(all_flat.keys()))
-    inv_curr = s2.selectbox("Yatırım Birimi:", ["TL", "USD", "EUR"])
+    asset_key = s1.selectbox("Varlık:", list(all_flat.keys()))
+    inv_curr = s2.selectbox("Birim:", ["TL", "USD", "EUR"])
     amt = s3.number_input("Tutar:", min_value=1.0, value=1000.0)
-    dt = s4.date_input("Başlangıç Tarihi:", value=datetime.now() - timedelta(days=365))
+    dt = s4.date_input("Tarih:", value=datetime.now() - timedelta(days=365))
 
-    if st.button("Hesaplamayı Başlat"):
-        # Varlık ve Kur verilerini çek
+    if st.button("Hesapla"):
         asset_h = yf.Ticker(all_flat[asset_key]).history(start=dt)
         usd_h = yf.Ticker("USDTRY=X").history(start=dt)
-        eur_h = yf.Ticker("EURTRY=X").history(start=dt)
-        
         if not asset_h.empty and not usd_h.empty:
-            # 1. Başlangıç Değerleri
-            p_start = asset_h['Close'].iloc[0]
-            p_now = asset_h['Close'].iloc[-1]
-            u_start = usd_h['Close'].iloc[0]
-            u_now = usd_h['Close'].iloc[-1]
-            e_start = eur_h['Close'].iloc[0]
-            
-            # 2. Varlığın Büyüme Oranı
-            growth = p_now / p_start
-            
-            # 3. Sonuç Hesaplama (Birim Dönüşümleri Dahil)
-            # BIST veya TRY çifti değilse varlık genelde USD bazlıdır
-            is_try_asset = ".IS" in all_flat[asset_key] or "TRY" in all_flat[asset_key]
-            
-            # Basit ama etkili büyüme hesabı
+            growth = asset_h['Close'].iloc[-1] / asset_h['Close'].iloc[0]
+            is_try = ".IS" in all_flat[asset_key] or "TRY" in all_flat[asset_key]
             final_val = amt * growth
-            
-            # Eğer varlık USD ise ama biz TL yatırdıysak kur farkını ekle
-            if inv_curr == "TL" and not is_try_asset:
-                final_val = amt * growth * (u_now / u_start)
-            elif inv_curr == "EUR" and not is_try_asset:
-                # EUR -> USD dönüşümü ve büyüme
-                final_val = amt * growth * ((u_now/u_start) / (u_now/e_start)) # Yaklaşık parite hesabı
-            
-            st.success(f"Yatırımın Bugünkü Değeri: **{final_val:,.2f} {inv_curr}**")
-            st.info(f"Net Kar/Zarar: **{final_val - amt:,.2f} {inv_curr}** | Getiri Oranı: **% {((final_val/amt)-1)*100:+.2f}**")
+            if inv_curr == "TL" and not is_try:
+                final_val = amt * growth * (usd_h['Close'].iloc[-1] / usd_h['Close'].iloc[0])
+            st.success(f"Değer: **{final_val:,.2f} {inv_curr}**")
+            st.info(f"Getiri: **% {((final_val/amt)-1)*100:+.2f}**")
+
+# --- 6. YASAL UYARI (YENİ) ---
+st.markdown("""
+<div class="disclaimer-box">
+    <strong>⚠️ Yasal Uyarı / Disclaimer:</strong><br>
+    Bu terminalde sunulan veriler, grafikler ve simülasyon sonuçları yalnızca bilgilendirme amaçlıdır. Verilerin doğruluğu, güncelliği veya eksiksizliği garanti edilmemektedir. 
+    Burada yer alan hiçbir ifade yatırım danışmanlığı kapsamında değildir. Yatırım kararlarınızı vermeden önce mutlaka profesyonel bir finans danışmanına danışmalı ve kendi risk analizlerinizi yapmalısınız. 
+    Bu verilerdeki olası hatalardan veya bu verilere dayanılarak yapılan işlemlerden doğabilecek zararlardan yazılım sorumlu tutulamaz.<br><br>
+    <em>The data, charts, and simulation results presented in this terminal are for informational purposes only. Accuracy, timeliness, or completeness of the data is not guaranteed. 
+    Nothing contained herein constitutes financial or investment advice. You should always consult with a professional financial advisor and perform your own risk analysis before making investment decisions. 
+    The software cannot be held liable for any potential errors in the data or losses arising from transactions based on this information.</em>
+</div>
+""", unsafe_allow_html=True)
