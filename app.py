@@ -7,15 +7,17 @@ from datetime import datetime, timedelta
 # 1. Sayfa Yapılandırması
 st.set_page_config(page_title="Ekonomi Terminali", layout="wide", page_icon="🏛️")
 
-# 2. Kalıcı Dark Mode Kilidi & Stil Düzenlemeleri
+# 2. Kalıcı Dark Mode Kilidi, Menü Gizleme ve Profesyonel CSS
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
     
+    /* ÜST MENÜYÜ VE AYARLARI GİZLE */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
+    /* KARANLIK MOD RENK KİLİDİ */
     :root {
         --primary-color: #58a6ff;
         --background-color: #0d1117;
@@ -29,15 +31,21 @@ st.markdown("""
         color: #c9d1d9 !important;
     }
 
+    /* Yazı Renklerini Sabitle */
     h1, h2, h3, h4, label, .stMarkdown, p, span { color: #c9d1d9 !important; }
 
+    /* Metrik Kartları */
     [data-testid="stMetric"] {
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
         padding: 20px;
         border-radius: 12px;
     }
+    
+    [data-testid="stMetricLabel"] { color: #8b949e !important; font-size: 14px !important; font-weight: 600 !important; }
 
+    /* Tab Tasarımı */
+    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
     .stTabs [data-baseweb="tab"] {
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
@@ -47,6 +55,7 @@ st.markdown("""
     }
     .stTabs [aria-selected="true"] { border-color: #58a6ff !important; color: #58a6ff !important; }
 
+    /* Takvim Kartları */
     .calendar-card {
         padding: 15px;
         border-radius: 10px;
@@ -72,7 +81,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 3. VERİ SÖZLÜKLERİ (Tüm Değişkenler Eksiksiz Korundu)
+# 3. VERİ SÖZLÜKLERİ
 currencies = {
     "Dolar / TL": ["USDTRY=X", "₺"], "Euro / TL": ["EURTRY=X", "₺"],
     "Sterlin / TL": ["GBPTRY=X", "₺"], "İsviçre Frangı / TL": ["CHFTRY=X", "₺"],
@@ -137,7 +146,7 @@ economic_calendar = [
     {"Tarih": "2026-12-16", "Ülke": "🇺🇸 ABD", "Olay": "Yılın Son FED Faiz Kararı", "Etki": "Yüksek"}
 ]
 
-# 4. FONKSİYONLAR
+# 4. YARDIMCI FONKSİYONLAR
 def fetch_data(ticker, multiplier=1):
     try:
         d = yf.Ticker(ticker).history(period="7d")
@@ -156,14 +165,17 @@ def render_pro_chart(assets_dict, category_name):
     if any(isinstance(v, dict) for v in assets_dict.values()):
         for sub in assets_dict.values(): flat_list.update(sub)
     else: flat_list = assets_dict
+
     with c_sel:
-        name = st.selectbox(f"Varlık:", list(flat_list.keys()), key=f"s_{category_name}")
+        name = st.selectbox(f"Varlık Seç ({category_name}):", list(flat_list.keys()), key=f"s_{category_name}")
         val = flat_list[name]
         ticker = val[0] if isinstance(val, list) else val
         mult = val[1] if isinstance(val, list) and isinstance(val[1], (int, float)) else 1
+
     with c_per:
         per_map = {"1 Ay": "1mo", "1 Yıl": "1y", "5 Yıl": "5y"}
-        sel_p = st.select_slider("Zaman:", options=list(per_map.keys()), value="1 Yıl", key=f"p_{category_name}")
+        sel_p = st.select_slider(f"Zaman ({category_name}):", options=list(per_map.keys()), value="1 Yıl", key=f"p_{category_name}")
+    
     hist = yf.Ticker(ticker).history(period=per_map[sel_p])
     if not hist.empty:
         fig = go.Figure()
@@ -176,20 +188,19 @@ st.title("🏛️ Ekonomi Terminali")
 
 tabs = st.tabs(["💱 Döviz", "📉 Borsalar", "🏗️ Emtia", "🏢 Şirketler", "₿ Kripto", "📅 Takvim", "💼 Simülatör"])
 
-# Sekmelerin içeriği (Önceki v24 ile aynı)
 with tabs[0]:
     cols = st.columns(4)
     for idx, (n, v) in enumerate(currencies.items()):
         p, d, pct = fetch_data(v[0])
-        if p: cols[idx%4].metric(n, f"{p:,.4f}", f"{d:,.4f} (%{pct:+.2f})")
+        if p: cols[idx%4].metric(n, f"{p:,.4f}", f"{d:,.4f} (%{pct:+.2f}%)")
     render_pro_chart(currencies, "Döviz")
 
 with tabs[1]:
-    region = st.radio("Bölge:", list(stock_exchanges.keys()), horizontal=True)
+    region = st.radio("Bölge Seç:", list(stock_exchanges.keys()), horizontal=True)
     cols = st.columns(3)
     for idx, (n, t) in enumerate(stock_exchanges[region].items()):
         p, d, pct = fetch_data(t)
-        if p: cols[idx%3].metric(n, f"{p:,.2f}", f"{d:,.2f} (%{pct:+.2f})")
+        if p: cols[idx%3].metric(n, f"{p:,.2f}", f"{d:,.2f} (%{pct:+.2f}%)")
     render_pro_chart(stock_exchanges, "Borsalar")
 
 with tabs[2]:
@@ -199,29 +210,31 @@ with tabs[2]:
         for idx, (n, v) in enumerate(items.items()):
             p, d, pct = fetch_data(v[0], v[1])
             if p: 
-                cols[idx%4].metric(n, f"{p:,.2f}", f"{d:,.2f} (%{pct:+.2f})")
+                cols[idx%4].metric(n, f"{p:,.2f}", f"{d:,.2f} (%{pct:+.2f}%)")
                 cols[idx%4].markdown(f'<p class="unit-text">Birim: {v[2]}</p>', unsafe_allow_html=True)
     render_pro_chart(commodities, "Emtia")
 
 with tabs[3]:
-    c_reg = st.radio("Seçim:", list(company_data.keys()), horizontal=True)
+    c_reg = st.radio("Şirket Bölgesi:", list(company_data.keys()), horizontal=True)
     cols = st.columns(3)
     for idx, (n, t) in enumerate(company_data[c_reg].items()):
         p, d, pct = fetch_data(t)
-        if p: cols[idx%3].metric(n, f"{p:,.2f}", f"{d:,.2f} (%{pct:+.2f})")
+        if p: cols[idx%3].metric(n, f"{p:,.2f}", f"{d:,.2f} (%{pct:+.2f}%)")
     render_pro_chart(company_data, "Şirketler")
 
 with tabs[4]:
     cols = st.columns(4)
     for idx, (n, t) in enumerate(crypto.items()):
         p, d, pct = fetch_data(t)
-        if p: cols[idx%4].metric(n, f"{n}", f"{p:,.2f}", f"{pct:+.2f}%")
+        if p: 
+            # DÜZELTİLDİ: 3 argüman kuralı (İsim, Fiyat, Değişim)
+            cols[idx%4].metric(n, f"{p:,.2f}", f"{d:,.2f} (%{pct:+.2f}%)")
     render_pro_chart(crypto, "Kripto")
 
 with tabs[5]:
     st.subheader("📅 Stratejik Ekonomik Takvim (2026)")
     for event in economic_calendar:
-        st.markdown(f'<div class="calendar-card"><b>{event["Tarih"]}</b> | {event["Ülke"]} - <b>{event["Olay"]}</b><br><small style="color: #8b949e">Önem: {event["Etki"]}</small></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="calendar-card"><b>{event["Tarih"]}</b> | {event["Ülke"]} - <b>{event["Olay"]}</b><br><small style="color: #8b949e">Önem Derecesi: {event["Etki"]}</small></div>', unsafe_allow_html=True)
 
 with tabs[6]:
     st.subheader("💼 Akıllı Yatırım Simülatörü")
@@ -232,12 +245,12 @@ with tabs[6]:
         for k, v in sub.items(): all_flat[k] = v[0]
     for sub in company_data.values(): all_flat.update(sub)
 
-    asset_key = s1.selectbox("Varlık:", list(all_flat.keys()))
-    inv_curr = s2.selectbox("Birim:", ["TL", "USD", "EUR"])
-    amt = s3.number_input("Tutar:", min_value=1.0, value=1000.0)
-    dt = s4.date_input("Tarih:", value=datetime.now() - timedelta(days=365))
+    asset_key = s1.selectbox("Simülasyon Varlığı:", list(all_flat.keys()))
+    inv_curr = s2.selectbox("Yatırım Para Birimi:", ["TL", "USD", "EUR"])
+    amt = s3.number_input("Yatırım Tutarı:", min_value=1.0, value=1000.0)
+    dt = s4.date_input("Yatırım Başlangıç Tarihi:", value=datetime.now() - timedelta(days=365))
 
-    if st.button("Hesapla"):
+    if st.button("Simülasyonu Çalıştır"):
         asset_h = yf.Ticker(all_flat[asset_key]).history(start=dt)
         usd_h = yf.Ticker("USDTRY=X").history(start=dt)
         if not asset_h.empty and not usd_h.empty:
@@ -246,10 +259,10 @@ with tabs[6]:
             final_val = amt * growth
             if inv_curr == "TL" and not is_try:
                 final_val = amt * growth * (usd_h['Close'].iloc[-1] / usd_h['Close'].iloc[0])
-            st.success(f"Değer: **{final_val:,.2f} {inv_curr}**")
-            st.info(f"Getiri: **% {((final_val/amt)-1)*100:+.2f}**")
+            st.success(f"Portföyün Bugünkü Değeri: **{final_val:,.2f} {inv_curr}**")
+            st.info(f"Net Getiri: **% {((final_val/amt)-1)*100:+.2f}**")
 
-# --- 6. YASAL UYARI (YENİ) ---
+# --- YASAL UYARI ---
 st.markdown("""
 <div class="disclaimer-box">
     <strong>⚠️ Yasal Uyarı / Disclaimer:</strong><br>
