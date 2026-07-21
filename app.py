@@ -113,10 +113,14 @@ commodities = {
         "Platin": ["PL=F", 1, "USD/Ons"], "Paladyum": ["PA=F", 1, "USD/Ons"]
     },
     "🛢️ Enerji & Sanayi": {
-        "Brent Petrol": ["BZ=F", 1, "USD/Varil"], "WTI Petrol": ["CL=F", 1, "USD/Varil"],
-        "Doğalgaz": ["NG=F", 1, "USD/MMBtu"], "Dizel": ["HO=F", 1, "USD/Galon"],
-        "Bakır (Ton)": ["HG=F", 2204.62, "USD/Ton"], "Alüminyum (Ton)": ["ALI=F", 1, "USD/Ton"],
-        "Çinko (Ton)": ["ZN=F", 1, "USD/Ton"], "Nikel (Ton)": ["NI=F", 1, "USD/Ton"]
+        "Brent Petrol": ["BZ=F", 1, "USD/Varil"],
+        "WTI Petrol": ["CL=F", 1, "USD/Varil"],
+        "Doğalgaz": ["NG=F", 1, "USD/MMBtu"],
+        "Dizel (Gasoil)": ["HO=F", 1, "USD/Galon"],
+        "Bakır (Ton)": ["HG=F", 2204.62, "USD/Ton"],
+        "Alüminyum (Ton)": ["ALI=F", 1, "USD/Ton"],
+        "Çinko (Ton)": ["ZN=F", 1, "USD/Ton"],
+        "Nikel (Ton)": ["NI=F", 1, "USD/Ton"]
     },
     "🌾 Tarım Ürünleri": {
         "Pamuk": ["CT=F", 1, "USD/Lbs"], "Buğday": ["W=F", 1, "USD/Bushel"], 
@@ -209,9 +213,11 @@ with tabs[2]:
         cols = st.columns(4)
         for idx, (n, v) in enumerate(items.items()):
             p, d, pct = fetch_data(v[0], v[1])
-            if p: 
-                cols[idx%4].metric(n, f"{p:,.2f}", f"{d:,.2f} (%{pct:+.2f}%)")
-                cols[idx%4].markdown(f'<p class="unit-text">Birim: {v[2]}</p>', unsafe_allow_html=True)
+            if p is not None: 
+                cols[idx % 4].metric(n, f"{p:,.2f}", f"{d:,.2f} (%{pct:+.2f}%)")
+                cols[idx % 4].markdown(f'<p class="unit-text">Birim: {v[2]}</p>', unsafe_allow_html=True)
+            else:
+                cols[idx % 4].metric(n, "Veri Alınamadı", "—")
     render_pro_chart(commodities, "Emtia")
 
 with tabs[3]:
