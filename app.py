@@ -153,13 +153,18 @@ economic_calendar = [
 # 4. YARDIMCI FONKSİYONLAR
 def fetch_data(ticker, multiplier=1):
     try:
-        d = yf.Ticker(ticker).history(period="1mo")
+        t = yf.Ticker(ticker)
+        d = t.history(period="1mo", interval="1d")
+        if d.empty or len(d) < 2:
+            # Yedek deneme (5 günlük)
+            d = t.history(period="5d")
+        
         if not d.empty and len(d) >= 2:
             curr = d['Close'].iloc[-1] * multiplier
             diff = curr - (d['Close'].iloc[-2] * multiplier)
             pct = (diff / (d['Close'].iloc[-2] * multiplier)) * 100
             return curr, diff, pct
-    except:
+    except Exception:
         return None, None, None
     return None, None, None
 
