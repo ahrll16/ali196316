@@ -116,7 +116,7 @@ commodities = {
         "Brent Petrol": ["BZ=F", 1, "USD/Varil"],
         "WTI Petrol": ["CL=F", 1, "USD/Varil"],
         "Doğalgaz": ["NG=F", 1, "USD/MMBtu"],
-        "Dizel (Gasoil)": ["HO=F", 1, "USD/Galon"],
+        "Dizel (Gasoil)": ["LGO=F", 1, "USD/Ton"],
         "Bakır (Ton)": ["HG=F", 2204.62, "USD/Ton"],
         "Alüminyum (Ton)": ["ALI=F", 1, "USD/Ton"],
         "Çinko (Ton)": ["ZN=F", 1, "USD/Ton"],
@@ -217,7 +217,7 @@ with tabs[2]:
                 cols[idx % 4].metric(n, f"{p:,.2f}", f"{d:,.2f} (%{pct:+.2f}%)")
                 cols[idx % 4].markdown(f'<p class="unit-text">Birim: {v[2]}</p>', unsafe_allow_html=True)
             else:
-                cols[idx % 4].metric(n, "Veri Alınamadı", "—")
+                cols[idx % 4].metric(n, "Yükleniyor...", "—")
     render_pro_chart(commodities, "Emtia")
 
 with tabs[3]:
