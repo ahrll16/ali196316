@@ -116,7 +116,7 @@ commodities = {
         "Brent Petrol": ["BZ=F", 1, "USD/Varil"],
         "WTI Petrol": ["CL=F", 1, "USD/Varil"],
         "Doğalgaz": ["NG=F", 1, "USD/MMBtu"],
-        "Dizel (Gasoil)": ["LGO=F", 1, "USD/Ton"],
+        "Dizel (Gasoil)": ["GOS=F", 1, "USD/Ton"],
         "Bakır (Ton)": ["HG=F", 2204.62, "USD/Ton"],
         "Alüminyum (Ton)": ["ALI=F", 1, "USD/Ton"],
         "Çinko (Ton)": ["ZN=F", 1, "USD/Ton"],
@@ -153,13 +153,14 @@ economic_calendar = [
 # 4. YARDIMCI FONKSİYONLAR
 def fetch_data(ticker, multiplier=1):
     try:
-        d = yf.Ticker(ticker).history(period="7d")
+        d = yf.Ticker(ticker).history(period="1mo")
         if not d.empty and len(d) >= 2:
             curr = d['Close'].iloc[-1] * multiplier
             diff = curr - (d['Close'].iloc[-2] * multiplier)
             pct = (diff / (d['Close'].iloc[-2] * multiplier)) * 100
             return curr, diff, pct
-    except: return None, None, None
+    except:
+        return None, None, None
     return None, None, None
 
 def render_pro_chart(assets_dict, category_name):
