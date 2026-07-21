@@ -114,9 +114,9 @@ commodities = {
     },
     "🛢️ Enerji & Sanayi": {
         "Brent Petrol": ["BZ=F", 1, "USD/Varil"], "WTI Petrol": ["CL=F", 1, "USD/Varil"],
-        "Doğalgaz": ["NG=F", 1, "USD/MMBtu"], "Bakır (Ton)": ["HG=F", 2204.62, "USD/Ton"],
-        "Alüminyum (Ton)": ["ALI=F", 1, "USD/Ton"], "Çinko (Ton)": ["ZN=F", 1, "USD/Ton"],
-        "Nikel (Ton)": ["NI=F", 1, "USD/Ton"]
+        "Doğalgaz": ["NG=F", 1, "USD/MMBtu"], "Dizel": ["HO=F", 1, "USD/Galon"],
+        "Bakır (Ton)": ["HG=F", 2204.62, "USD/Ton"], "Alüminyum (Ton)": ["ALI=F", 1, "USD/Ton"],
+        "Çinko (Ton)": ["ZN=F", 1, "USD/Ton"], "Nikel (Ton)": ["NI=F", 1, "USD/Ton"]
     },
     "🌾 Tarım Ürünleri": {
         "Pamuk": ["CT=F", 1, "USD/Lbs"], "Buğday": ["W=F", 1, "USD/Bushel"], 
