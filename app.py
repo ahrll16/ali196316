@@ -116,11 +116,11 @@ commodities = {
         "Brent Petrol": ["BZ=F", 1, "USD/Varil"],
         "WTI Petrol": ["CL=F", 1, "USD/Varil"],
         "Doğalgaz": ["NG=F", 1, "USD/MMBtu"],
-        "Dizel (Gasoil)": ["HO=F", 1, "USD/Galon"],
+        "Dizel (Gasoil)": ["LGO=F", 1, "USD/Ton"],
         "Bakır (Ton)": ["HG=F", 2204.62, "USD/Ton"],
         "Alüminyum (Ton)": ["ALI=F", 1, "USD/Ton"],
         "Çinko (Ton)": ["ZN=F", 1, "USD/Ton"],
-        "Nikel (Ton)": ["NIL=F", 1, "USD/Ton"]
+        "Nikel (Ton)": ["NI=F", 1, "USD/Ton"]
     },
     "🌾 Tarım Ürünleri": {
         "Pamuk": ["CT=F", 1, "USD/Lbs"], "Buğday": ["W=F", 1, "USD/Bushel"], 
@@ -154,15 +154,16 @@ economic_calendar = [
 def fetch_data(ticker, multiplier=1):
     try:
         t = yf.Ticker(ticker)
-        d = t.history(period="1mo", interval="1d")
+        # Öncelik 1 aylık veri (Hafta sonu/tatil takılmalarını çözer)
+        d = t.history(period="1mo")
         if d.empty or len(d) < 2:
-            # Yedek deneme (5 günlük)
             d = t.history(period="5d")
-        
+            
         if not d.empty and len(d) >= 2:
-            curr = d['Close'].iloc[-1] * multiplier
-            diff = curr - (d['Close'].iloc[-2] * multiplier)
-            pct = (diff / (d['Close'].iloc[-2] * multiplier)) * 100
+            curr = d['Close'].dropna().iloc[-1] * multiplier
+            prev = d['Close'].dropna().iloc[-2] * multiplier
+            diff = curr - prev
+            pct = (diff / prev) * 100
             return curr, diff, pct
     except Exception:
         return None, None, None
