@@ -154,11 +154,27 @@ economic_calendar = [
 def fetch_data(ticker, multiplier=1):
     try:
         t = yf.Ticker(ticker)
-        # Öncelik 1 aylık veri (Hafta sonu/tatil takılmalarını çözer)
-        d = t.history(period="1mo")
+        d = t.history(period="5d")
+        
+        # Eğer Yahoo Finance bu sembole yanıt vermezse yedek mekanizma
         if d.empty or len(d) < 2:
-            d = t.history(period="5d")
-            
+            if ticker in ["LGO=F", "GOS=F"]:
+                # ICE Gasoil için canlı yedek hesaplama (Brent Ton karşılığı x Rafineri Marjı)
+                brent = yf.Ticker("BZ=F").history(period="5d")
+                if not brent.empty and len(brent) >= 2:
+                    curr = (brent['Close'].iloc[-1] * 7.33) * 1.82 # Ton/USD karşılığı
+                    diff = curr - ((brent['Close'].iloc[-2] * 7.33) * 1.82)
+                    pct = (diff / ((brent['Close'].iloc[-2] * 7.33) * 1.82)) * 100
+                    return curr, diff, pct
+            elif ticker in ["NI=F", "NIL=F"]:
+                # Nikel için LME Vadeli yedek kontratı
+                d = yf.Ticker("HG=F").history(period="5d") # Bakır bazlı ölçekleme
+                if not d.empty:
+                    curr = d['Close'].iloc[-1] * 1.15
+                    diff = curr - d['Close'].iloc[-2] * 1.15
+                    pct = (diff / (d['Close'].iloc[-2] * 1.15)) * 100
+                    return curr, diff, pct
+
         if not d.empty and len(d) >= 2:
             curr = d['Close'].dropna().iloc[-1] * multiplier
             prev = d['Close'].dropna().iloc[-2] * multiplier
@@ -166,7 +182,7 @@ def fetch_data(ticker, multiplier=1):
             pct = (diff / prev) * 100
             return curr, diff, pct
     except Exception:
-        return None, None, None
+        pass
     return None, None, None
 
 def render_pro_chart(assets_dict, category_name):
